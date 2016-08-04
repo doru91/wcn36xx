@@ -356,8 +356,7 @@ static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
 	return 0;
 }
 
-#define WCN36XX_SUPPORTED_FILTERS (FIF_PROMISC_IN_BSS | \
-				   FIF_ALLMULTI)
+#define WCN36XX_SUPPORTED_FILTERS (FIF_ALLMULTI)
 
 static void wcn36xx_configure_filter(struct ieee80211_hw *hw,
 				     unsigned int changed,
@@ -377,7 +376,7 @@ static void wcn36xx_configure_filter(struct ieee80211_hw *hw,
 		vif = wcn36xx_priv_to_vif(tmp);
 
 		/* FW handles MC filtering only when connected as STA */
-		if (*total & (FIF_ALLMULTI | FIF_PROMISC_IN_BSS))
+		if (*total & (FIF_ALLMULTI))
 			wcn36xx_smd_set_mc_list(wcn, vif, NULL);
 		else if (NL80211_IFTYPE_STATION == vif->type && tmp->sta_assoc)
 			wcn36xx_smd_set_mc_list(wcn, vif, fp);
@@ -543,16 +542,17 @@ out:
 	return ret;
 }
 
-static void wcn36xx_sw_scan_start(struct ieee80211_hw *hw)
-{
+static void wcn36xx_sw_scan_start(struct ieee80211_hw *hw,
+				  struct ieee80211_vif *vif,
+				  const u8 *mac_addr) {
 	struct wcn36xx *wcn = hw->priv;
 
 	wcn36xx_smd_init_scan(wcn, HAL_SYS_MODE_SCAN);
 	wcn36xx_smd_start_scan(wcn);
 }
 
-static void wcn36xx_sw_scan_complete(struct ieee80211_hw *hw)
-{
+static void wcn36xx_sw_scan_complete(struct ieee80211_hw *hw,
+				     struct ieee80211_vif *vif) {
 	struct wcn36xx *wcn = hw->priv;
 
 	wcn36xx_smd_end_scan(wcn);
