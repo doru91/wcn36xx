@@ -978,6 +978,23 @@ static const struct ieee80211_ops wcn36xx_ops = {
 	.ampdu_action		= wcn36xx_ampdu_action,
 };
 
+static const struct ieee80211_iface_limit if_limits[] = {
+	{ 
+		.max = 3,
+		.types = BIT(NL80211_IFTYPE_STATION) |
+	  		     BIT(NL80211_IFTYPE_AP),
+	},
+};
+
+static const struct ieee80211_iface_combination if_comb[] = {
+	{
+		.limits = if_limits,
+		.n_limits = ARRAY_SIZE(if_limits),
+		.max_interfaces = 3,
+		.num_different_channels = 1,
+	},
+};
+
 static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 {
 	int ret = 0;
@@ -1000,6 +1017,9 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 		BIT(NL80211_IFTYPE_AP) |
 		BIT(NL80211_IFTYPE_ADHOC) |
 		BIT(NL80211_IFTYPE_MESH_POINT);
+	
+	wcn->hw->wiphy->iface_combinations = if_comb; 
+	
 
 	wcn->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wcn_band_2ghz;
 	wcn->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &wcn_band_5ghz;
