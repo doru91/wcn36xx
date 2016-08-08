@@ -247,6 +247,12 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 		goto out_err;
 	}
 
+	ret = dma_set_coherent_mask(wcn->dev, DMA_BIT_MASK(32));
+	if (ret) {
+		wcn36xx_err("Failed to set DMA mask: %d\n", ret);
+		goto out_smd_close;
+	}
+
 	/* Allocate memory pools for Mgmt BD headers and Data BD headers */
 	ret = wcn36xx_dxe_allocate_mem_pools(wcn);
 	if (ret) {
