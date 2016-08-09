@@ -77,6 +77,12 @@ static struct wcn36xx_cfg_val wcn36xx_cfg_vals[] = {
 	WCN36XX_CFG_VAL(ENABLE_MCC_ADAPTIVE_SCHEDULER, 0),
 };
 
+/* This is an 802.11 header with ethertype 3660 */
+const char dump_hdr_f[] = {0x88,0x01,0x00,0x00,0x01,0x01,0x01,0x01,0x01,0x01,0xff,0xff,0xff,0xff,0xff,0x00,                         0x01,0x01,0x01,0x01,0x01,0x01,0x00,0x00,0x00,0x00,0xaa,0xaa,0x03,0x00,0x00,0x00,0x36,0x60};
+const char dump_hdr_t[] = {0x88,0x01,0x00,0x00,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,                         0xff,0xff,0xff,0xff,0xff,0x00,0x00,0x00,0x00,0x00,0xaa,0xaa,0x03,0x00,0x00,0x00,0x36,0x60};
+
+u8 dump_buf[8192];
+
 static int put_cfg_tlv_u32(struct wcn36xx *wcn, size_t *len, u32 id, u32 value)
 {
 	struct wcn36xx_hal_cfg *entry;
@@ -251,6 +257,12 @@ static int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
 	int ret = 0;
 	unsigned long start;
 	wcn36xx_dbg_dump(WCN36XX_DBG_SMD_DUMP, "HAL >>> ", wcn->hal_buf, len);
+
+	memcpy(dump_buf, dump_hdr_t, 0x22);
+	memcpy(dump_buf + 0x22, wcn->hal_buf, len);
+	print_hex_dump(KERN_DEBUG, "wcnxxd:  HAL >>> ",
+		       DUMP_PREFIX_OFFSET, 32, 1,
+		       dump_buf, len + 0x22, false);
 
 	init_completion(&wcn->hal_rsp_compl);
 	start = jiffies;
@@ -2185,6 +2197,12 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 	struct wcn36xx_hal_msg_header *msg_header = buf;
 	struct wcn36xx_hal_ind_msg *msg_ind;
 	wcn36xx_dbg_dump(WCN36XX_DBG_SMD_DUMP, "SMD <<< ", buf, len);
+
+	memcpy(dump_buf, dump_hdr_f, 0x22);
+	memcpy(dump_buf + 0x22, buf, len);
+	print_hex_dump(KERN_DEBUG, "wcnxxd:  SMD <<< ",
+		       DUMP_PREFIX_OFFSET, 32, 1,
+		       dump_buf, len + 0x22, false);
 
 	switch (msg_header->msg_type) {
 	case WCN36XX_HAL_START_RSP:
